@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.contrib import messages
 # Create your views here.
 
 from .models import Post
@@ -12,22 +13,35 @@ def post_create(request):
         instance = form.save(commit=False) # commit = false does not save the instance to the database.
         print form.cleaned_data.title
         instance.save() # saves to the database.
-    # if request.method =="POST":
-    #     print "title " + request.POST.get("title")
-    #      print "content " + request.POST.get("content")
-
+        messages.success(request, "Successfully created ! ")
+    else:
+        messages.error(request, "Not Successfully created ! ")
     context = {
+        "title":"Create",
         "form":form,
     }
     return render(request, "post_form.html", context)
 
 
 
-def post_update(request):
+def post_update(request, id=None):
+    instance = get_object_or_404(Post, id=id)
+    # provide instance to PostForm which is a subclass of models.modelForm so that it already loads the instance without creating a new one.
+    form = PostForm(request.POST or None, instance=instance)
+    if form.is_valid():
+        instance = form.save(commit=False) # commit = false does not save the instance to the database.
+        instance.save() # saves to the database.
+        # message success
+        messages.success(request, "Successfully saved ! ")
+        return HttpResponseRedirect(instance.get_absolute_url())
+    # else:
+    #    messages.error(request, "Save failed ! ")
     context = {
         "title":"Update",
+        "instance" : instance,
+        "form" : form,
     }
-    return render(request, "index.html", context)
+    return render(request, "post_form.html", context)
 
 
 
