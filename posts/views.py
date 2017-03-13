@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import messages
 # Create your views here.
@@ -9,11 +9,13 @@ from .forms import PostForm
 def post_create(request):
 
     form = PostForm(request.POST or None)
+    print form
     if form.is_valid():
         instance = form.save(commit=False) # commit = false does not save the instance to the database.
-        print form.cleaned_data.title
+        # print form.cleaned_data.title
         instance.save() # saves to the database.
         messages.success(request, "Successfully created ! ")
+        return redirect("posts:list")
     else:
         messages.error(request, "Not Successfully created ! ")
     context = {
@@ -21,6 +23,7 @@ def post_create(request):
         "form":form,
     }
     return render(request, "post_form.html", context)
+
 
 
 
@@ -45,11 +48,12 @@ def post_update(request, id=None):
 
 
 
-def post_delete(request):
-    context = {
-        "title":"Delete",
-    }
-    return render(request, "index.html", context)
+def post_delete(request, id=None):
+
+    instance = get_object_or_404(Post, id=id)
+    instance.delete()
+    messages.success(request, "Successfully deleted")
+    return redirect( "posts:list")
 
 
 def post_list(request):
@@ -59,7 +63,7 @@ def post_list(request):
         "title":"List",
     }
 
-    return render(request, "index.html", context)
+    return render(request, "posts_list.html", context)
 
 
 def post_detail(request,id=None):
